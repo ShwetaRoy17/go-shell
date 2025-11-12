@@ -5,7 +5,7 @@ set -e
 
 (
     cd "$(dirname "$0")"
-    go build -0 app/*.go
+    go build -o /tmp/go-shell-build app/*.go
 )
 
-exec ./app "$@
+exec /tmp/go-shell-build "$@"
