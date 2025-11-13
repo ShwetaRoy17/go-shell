@@ -24,7 +24,7 @@ func TypFun(argv []string) {
 		fmt.Printf("%s is a shell builtin\n",val)
 		return
 	}
-	if file, exists := FindInPath(val); exists == true {
+	if file, exists := FindInPath(val); exists{
 		fmt.Printf("%s is %s\n", val, file)
 		return
 	}
@@ -33,13 +33,18 @@ func TypFun(argv []string) {
 }
 
 func FindInPath(bin string) (string, bool) {
+	if file,exec := isExectutable(bin); exec {
+		return file, true
+	}
 	paths := os.Getenv("PATH")
 	arr := strings.Split(paths, ":")
-
-	for _, path := range arr{
-		file:=filepath.Join(path, bin)
-		if _, err := os.Stat(file); err == nil {
+	for _, path := range arr {
+		fullpath := filepath.Join(path,bin)
+		if file,err:=isExectutable(fullpath); err {
 			return file, true
+		}
+		if _, err := os.Stat(fullpath); err == nil {
+			return fullpath, true
 		}
 	}
 	return "", false
@@ -63,15 +68,6 @@ func EchoCmd(argv []string) {
 }
 
 
-func isExectutable(filePath string) (string,bool) {
-	
-	// this will tell if the command exists in the path or not
-    path, err := exec.LookPath(filePath)
-    if err != nil {
-        return "", false
-    }
-    return path, true
-}
 
 func ExtProg(argv []string) {
 	path,exists := isExectutable(argv[0])
@@ -90,4 +86,14 @@ func ExtProg(argv []string) {
 		fmt.Printf("%s: command not found\n", argv[0])
 	}
 
+}
+
+func isExectutable(filePath string) (string,bool) {
+	
+	// this will tell if the command exists in the path or not
+    path, err := exec.LookPath(filePath)
+    if err != nil {
+        return "", false
+    }
+    return path, true
 }
