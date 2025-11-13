@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
-"github.com/ShwetaRoy17/go-shell/app/shell"
+"github.com/ShwetaRoy17/go-shell/app/shell" 
 )
 
 // Ensures gofmt doesn't remove the "fmt" and "os" imports in stage 1 (feel free to remove this!)
@@ -34,6 +34,8 @@ func main() {
 			shell.EchoCmd(argv)
 		case "exit":
 			shell.ExitCmd(argv)
+		case "pwd":
+			shell.Pwd()
 		default:
 			shell.ExtProg(argv)
 

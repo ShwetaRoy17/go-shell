@@ -5,11 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"slices"
 	"strconv"
 	"strings"
 )
-var builtIns = []string{"type", "echo", "exit"}
+var builtIns = map[string]bool{"type":true, "echo":true, "exit":true, "pwd":true}
 
 
 func TypFun(argv []string) {
@@ -20,7 +19,7 @@ func TypFun(argv []string) {
 
 	val := argv[1]
 
-	if slices.Contains(builtIns, val) {
+	if builtIns[val] {
 		fmt.Printf("%s is a shell builtin\n",val)
 		return
 	}
@@ -96,4 +95,11 @@ func isExectutable(filePath string) (string,bool) {
         return "", false
     }
     return path, true
+}
+
+func Pwd(){
+	dir,err := filepath.Abs(".")
+	if err==nil {
+		fmt.Println(dir)
+	}
 }
