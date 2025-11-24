@@ -22,7 +22,7 @@ You can run this shell application using Docker. This ensures you have all the n
 2.  **Build the Docker image:**
 
     ```bash
-    docker build -t go-shell .
+    docker build -t <image_name> .
     ```
 
 3.  **Run the container:**
@@ -30,7 +30,7 @@ You can run this shell application using Docker. This ensures you have all the n
     To use the shell interactively, you must run the container with the `-it` flags:
 
     ```bash
-    docker run -it --rm go-shell
+    docker run -it --rm <image_name>
     ```
 
     - `-i`: Keeps STDIN open so you can type commands.
