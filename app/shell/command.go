@@ -1,7 +1,6 @@
 package shell
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -15,11 +14,11 @@ var extCmd = map[string]bool{"cat": true, "ls": true, "date": true, "touch": tru
 
 func TypFun(argv []string) {
 
-	if len(argv) == 1 {
+	if len(argv) == 0 {
 		return
 	}
 
-	val := argv[1]
+	val := argv[0]
 	outputString := ""
 	if builtIns[val] {
 		outputString = fmt.Sprintf("%s is a shell builtin\n", val)
@@ -47,17 +46,17 @@ func ExitCmd(argv []string) {
 }
 
 func EchoCmd(argv []string) {
-	output := strings.Join(argv[1:], " ")
+	output := strings.Join(argv, " ")
 	fmt.Println(output)
 }
 
-func ExtProg(argv []string) {
-	if extCmd[argv[0]] {
+func ExtProg(command string,argv []string) {
+	if extCmd[command] {
 		var cmd *exec.Cmd
 		if len(argv) < 2 {
-			cmd = exec.Command(argv[0])
+			cmd = exec.Command(command)
 		} else {
-			cmd = exec.Command(argv[0], argv[1:]...)
+			cmd = exec.Command(command, argv...)
 		}
 		// cmd.Args = argv.Args // Set argv to use original command name as argv[0]
 
@@ -70,9 +69,9 @@ func ExtProg(argv []string) {
 		return
 	}
 
-	path, exists := isExecutable(argv[0])
+	path, exists := isExecutable(command)
 	if exists || builtIns[path] {
-		cmd := exec.Command(path, argv[1:]...)
+		cmd := exec.Command(path, argv...)
 		// cmd.Args = argv.Args // Set argv to use original command name as argv[0]
 		cmd.Args = argv
 		cmd.Stdin = os.Stdin
@@ -86,7 +85,7 @@ func ExtProg(argv []string) {
 		}
 
 	} else {
-		output := fmt.Sprintf("%s: command not found\n", argv[0])
+		output := fmt.Sprintf("%s: command not found\n", command)
 
 		fmt.Printf(output)
 
@@ -206,18 +205,3 @@ func findInPath(bin string) (string, bool) {
 	return "", false
 }
 
-// file creation based on mode
-func CreateFile(filepath string, mode rune) (*os.File, error) {
-	var file *os.File
-	var err error
-	if mode == 'a' {
-		file, err = os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	} else {
-		file, err = os.Create(filepath)
-		if err != nil {
-			return nil, errors.New("Error creating file " + filepath)
-		}
-	}
-	return file, err
-
-}
