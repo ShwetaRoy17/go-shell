@@ -36,9 +36,9 @@ func TypFun(argv []string) {
 
 func ExitCmd(argv []string) {
 	code := 0
-	if len(argv) > 1 {
-		val, err := strconv.Atoi(argv[1])
-		if err != nil {
+	if len(argv) > 0 {
+		val, err := strconv.Atoi(argv[0])
+		if err == nil {
 			code = val
 		}
 	}
@@ -50,52 +50,28 @@ func EchoCmd(argv []string) {
 	fmt.Println(output)
 }
 
-func ExtProg(command string,argv []string) {
-	if extCmd[command] {
-		var cmd *exec.Cmd
-		if len(argv) < 2 {
-			cmd = exec.Command(command)
-		} else {
-			cmd = exec.Command(command, argv...)
-		}
-		// cmd.Args = argv.Args // Set argv to use original command name as argv[0]
-
-		cmd.Args = argv
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-		}
-		return
-	}
-
+func ExtProg(command string, argv []string, oFile, eFile *os.File) {
 	path, exists := isExecutable(command)
-	if exists || builtIns[path] {
+
+	if exists {
 		cmd := exec.Command(path, argv...)
-		// cmd.Args = argv.Args // Set argv to use original command name as argv[0]
-		cmd.Args = argv
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		cmd.Args[0] = command
+		
+        cmd.Stdin = os.Stdin
+		cmd.Stdout = oFile
+		cmd.Stderr = eFile
+
 		if err := cmd.Run(); err != nil {
-
-			errorOp := "Error executing command:" + err.Error()
-
-			fmt.Fprintln(os.Stderr, errorOp)
+			if _, ok := err.(*exec.ExitError); !ok {
+				fmt.Fprintf(eFile, "%s: %v\n", command, err)
+			}
 		}
-
 	} else {
-		output := fmt.Sprintf("%s: command not found\n", command)
-
-		fmt.Printf(output)
-
+		fmt.Printf("%s: command not found\n", command)
 	}
-
 }
 
 func isExecutable(filePath string) (string, bool) {
-
-	// this will tell if the command exists in the path or not
 	path, err := exec.LookPath(filePath)
 	if err != nil {
 		return "", false
@@ -103,42 +79,41 @@ func isExecutable(filePath string) (string, bool) {
 	return path, true
 }
 
-func Pwd(filename string) {
-	dir, err := filepath.Abs(".")
-
+func Pwd() {
+	dir, err := os.Getwd()
 	if err == nil {
+		if strings.HasPrefix(dir, "//") {
+			dir = dir[1:]
+		}
+
 		fmt.Println(dir)
 	}
-
 }
 
 func Cd(argv []string) {
-	if len(argv) < 2 {
-		return
+
+	path := ""
+
+	if len(argv) < 1 {
+		path = "~"
+	} else {
+		path = argv[0]
 	}
-	if argv[1] == "~" {
+
+	
+	if path == "~" {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 
 			fmt.Fprintln(os.Stderr, "cd: could not find home directory")
 			return
 		}
-		err = os.Chdir(homeDir)
-		if err != nil {
-			op := fmt.Sprintf("cd: %s: No such file or directory\n", homeDir)
-
-			fmt.Fprintf(os.Stderr, op)
-
-		}
-		return
+		path = homeDir
 	}
-	path := argv[1]
+
 	err := os.Chdir(path)
 	if err != nil {
-		op := fmt.Sprintf("cd: %s: No such file or directory\n", path)
-
-		fmt.Fprintf(os.Stderr, op)
-
+		fmt.Fprintf(os.Stderr, "cd: %s: No such file or directory\n", path)
 	}
 }
 
@@ -204,4 +179,3 @@ func findInPath(bin string) (string, bool) {
 	}
 	return "", false
 }
-
