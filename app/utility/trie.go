@@ -1,4 +1,4 @@
-package internal
+package utility
 
 /**
  * Your Trie object will be instantiated and called as such:
@@ -26,7 +26,7 @@ func NewTrieNode() *TrieNode {
 }
 
 type Trie struct {
-	root *TrieNode
+	Root *TrieNode
 }
 
 func Constructor() Trie {
@@ -35,7 +35,7 @@ func Constructor() Trie {
 }
 
 func (t *Trie) Insert(word string) {
-	tmp := t.root
+	tmp := t.Root
 	for _, x := range word {
 		ind := int(x - 'a')
 		if tmp.child[ind] == nil {
@@ -48,7 +48,7 @@ func (t *Trie) Insert(word string) {
 }
 
 func (this *Trie) Search(word string) bool {
-	tmp := this.root
+	tmp := this.Root
 	for _, x := range word {
 		ind := int(x - 'a')
 		if tmp.child[ind] == nil {
@@ -60,7 +60,7 @@ func (this *Trie) Search(word string) bool {
 }
 
 func (t *Trie) StartsWith(prefix string) bool {
-	tmp := t.root
+	tmp := t.Root
 	for _, x := range prefix {
 		ind := int(x - 'a')
 		if tmp.child[ind] == nil {
@@ -72,7 +72,7 @@ func (t *Trie) StartsWith(prefix string) bool {
 }
 
 func (t *Trie) walkTrie(prefix string) *TrieNode {
-	node := t.root
+	node := t.Root
 
 	for _, c := range prefix {
 		c := c
@@ -84,3 +84,29 @@ func (t *Trie) walkTrie(prefix string) *TrieNode {
 	}
 	return node
 }
+
+func (t *Trie) FindCompletion(prefix string) []string {
+	node := t.walkTrie(prefix)
+	if node == nil {
+		return nil
+	}
+
+	res := make([]string, 0, len(node.child))
+	var traverse func(node *TrieNode, curStr string)
+	traverse = func(node *TrieNode, curStr string) {
+		if node == nil {
+			return
+		}
+		if node.IsEnd {
+			res = append(res, curStr)
+		}
+		for c, childNode := range node.child {
+			if childNode != nil {
+				traverse(childNode, curStr+string(rune(c+'a')))
+			}
+		}
+	}
+	traverse(node, prefix)
+	return res
+}
+

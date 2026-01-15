@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/ShwetaRoy17/go-shell/app/shell"
 	"os"
-"github.com/ShwetaRoy17/go-shell/app/shell" 
 )
 
 // Ensures gofmt doesn't remove the "fmt" and "os" imports in stage 1 (feel free to remove this!)

@@ -1,4 +1,4 @@
-package shell
+package internal
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 )
 
 
-func redirectInput(args []string) (clean []string, writeOutput bool, writeError bool, outputFile string, errorFile string, mode rune) {
+func RedirectInput(args []string) (clean []string, writeOutput bool, writeError bool, outputFile string, errorFile string, mode rune) {
 	
 	mode = 'a'
 	clean = []string{}

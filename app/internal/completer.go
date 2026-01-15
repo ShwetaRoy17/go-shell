@@ -7,16 +7,18 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"github.com/ShwetaRoy17/go-shell/app/utility"
+
 )
 
 type MyCompleter struct {
-	trie       *Trie
+	trie       *utility.Trie
 	lastPrefix string
 	tabcnt     int
 }
 
 func NewCompleter() readline.AutoCompleter {
-	t := &Trie{root: NewTrieNode()}
+	t := &utility.Trie{Root: utility.NewTrieNode()}
 	t.Insert("echo")
 	t.Insert("exit")
 	return &MyCompleter{
@@ -181,27 +183,3 @@ func isExecutable(filePath string) bool {
 	return false
 }
 
-func (t *Trie) FindCompletion(prefix string) []string {
-	node := t.walkTrie(prefix)
-	if node == nil {
-		return nil
-	}
-
-	res := make([]string, 0, len(node.child))
-	var traverse func(node *TrieNode, curStr string)
-	traverse = func(node *TrieNode, curStr string) {
-		if node == nil {
-			return
-		}
-		if node.IsEnd {
-			res = append(res, curStr)
-		}
-		for c, childNode := range node.child {
-			if childNode != nil {
-				traverse(childNode, curStr+string(rune(c+'a')))
-			}
-		}
-	}
-	traverse(node, prefix)
-	return res
-}

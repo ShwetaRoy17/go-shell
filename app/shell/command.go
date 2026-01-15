@@ -7,10 +7,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-)
 
-var builtIns = map[string]bool{"type": true, "echo": true, "exit": true, "pwd": true}
-var extCmd = map[string]bool{"cat": true, "ls": true, "date": true, "touch": true, "rm": true, "mkdir": true, "rmdir": true}
+	"github.com/ShwetaRoy17/go-shell/app/utility"
+)
 
 func TypFun(argv []string) {
 
@@ -20,7 +19,7 @@ func TypFun(argv []string) {
 
 	val := argv[0]
 	outputString := ""
-	if builtIns[val] {
+	if utility.BuiltIns[val] {
 		outputString = fmt.Sprintf("%s is a shell builtin\n", val)
 
 	} else if file, exists := findInPath(val); exists {
@@ -56,8 +55,8 @@ func ExtProg(command string, argv []string, oFile, eFile *os.File) {
 	if exists {
 		cmd := exec.Command(path, argv...)
 		cmd.Args[0] = command
-		
-        cmd.Stdin = os.Stdin
+
+		cmd.Stdin = os.Stdin
 		cmd.Stdout = oFile
 		cmd.Stderr = eFile
 
@@ -100,7 +99,6 @@ func Cd(argv []string) {
 		path = argv[0]
 	}
 
-	
 	if path == "~" {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
@@ -117,8 +115,6 @@ func Cd(argv []string) {
 	}
 }
 
-var escCh = map[byte]bool{'"': true, '\\': true, '$': true, '`': true}
-
 func SplitCmd(command string) []string {
 
 	s := []string{}
@@ -126,10 +122,10 @@ func SplitCmd(command string) []string {
 	curr := ""
 
 	n := len(command)
-	for i := 0; i < n-1; i++ {
+	for i := 0; i < n; i++ {
 		ch := command[i]
 		if esc && doubleQ {
-			if !escCh[ch] {
+			if !utility.EscCh[ch] {
 				curr += "\\"
 
 			}
