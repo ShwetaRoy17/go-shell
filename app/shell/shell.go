@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"github.com/chzyer/readline"
@@ -14,6 +15,10 @@ const (
 
 type Shell struct {
 	autocompleter readline.AutoCompleter
+	historyList       []string
+	appendHistoryList []string
+	shouldExit        bool
+	exitCode          int
 }
 
 func NewShell() *Shell {
@@ -22,7 +27,7 @@ func NewShell() *Shell {
 
 }
 
-func (s *Shell) Run() {
+func (s *Shell) Run() int {
 	
 	rl, err := readline.NewEx(&readline.Config{
 		Prompt:       prompt,
@@ -37,7 +42,19 @@ func (s *Shell) Run() {
 
 	defer rl.Close()
 
-	for true {
+	historyFile := os.Getenv("HISTFILE")
+	if historyFile != ""{
+		err := s.readHistory(historyFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			return 1
+		}
+		defer func(){
+			s.dumpHistory(historyFile)
+		}()
+	}
+	
+	for !s.shouldExit {
 		input, err :=rl.Readline()
 		if err != nil {
 			break
@@ -48,6 +65,8 @@ func (s *Shell) Run() {
 			continue
 		}
 		input = strings.Trim(input,"\n")
+		s.historyList = append(s.historyList,input)
+		s.appendHistoryList = append(s.appendHistoryList,input)
 		if internal.IsPipeline(input){
 			s.ExecutePipeline(input)
 		}else {
@@ -56,6 +75,6 @@ func (s *Shell) Run() {
 		
 
 	}
-
+return s.exitCode
 }
 

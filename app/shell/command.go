@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -174,4 +175,88 @@ func findInPath(bin string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func HistoryCmd(argv []string, historyList *[]string, appendHistoryList *[]string) {
+	n := len(argv)
+	if n > 2 {
+		return
+	}
+	hisLen := len(*historyList)
+	if n == 2 {
+		filepath := argv[1]
+		switch argv[0] {
+		case "-r":
+			readHistory(historyList, filepath)
+		case "-a":
+			appendHistory(historyList, filepath)
+		case "-w":
+			writeHistory(historyList, filepath)
+		default:
+		}
+	}
+	if n == 1 {
+		var err error
+		n, err = strconv.Atoi(argv[0])
+		if err == nil {
+			n = min(n, hisLen)
+		}
+	} else {
+		n = hisLen
+	}
+
+	for i := hisLen - n; i < hisLen; i++ {
+		fmt.Printf("    %d  %s\n", i+1, (*historyList)[i])
+	}
+}
+
+func readHistory(historyList *[]string, filepath string) error {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.TrimSpace(line) != "" {
+			*historyList = append(*historyList, line)
+		}
+	}
+	return scanner.Err()
+}
+
+func writeHistory(historyList *[]string, filepath string) error {
+	file, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	for _, line := range *historyList {
+		_, err := writer.WriteString(line + "\n")
+		if err != nil {
+			return err
+		}
+	}
+	return writer.Flush()
+}
+
+func appendHistory(historyList *[]string, filepath string) error {
+	file, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	writer := bufio.NewWriter(file)
+	for _, line := range *historyList {
+		_, err := writer.WriteString(line + "\n")
+		if err != nil {
+			return err
+		}
+	}
+	writer.Flush()
+	*historyList = []string{}
+	return nil
 }

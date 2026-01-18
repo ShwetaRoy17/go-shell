@@ -1,7 +1,9 @@
 package shell
 
 import (
+	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -61,6 +63,8 @@ func (s *Shell) Execute(input string) {
 		Pwd()
 	case "cd":
 		Cd(argv)
+	case "history":
+		HistoryCmd(argv, &s.historyList, &s.appendHistoryList)
 	default:
 		ExtProg(cmd, argv, oFile, eFile)
 
@@ -118,7 +122,7 @@ func (s *Shell) ExecutePipeline(input string) {
 
 		if isBuiltIn {
 			args, writeOutput, writeError, outputFile, errorFile, mode := internal.RedirectInput(cmd.Args)
-			var oriStderr io.Writer = os.Stderr 
+			var oriStderr io.Writer = os.Stderr
 
 			if writeOutput {
 				f, err := internal.CreateFile(outputFile, mode)
@@ -131,7 +135,7 @@ func (s *Shell) ExecutePipeline(input string) {
 			if writeError {
 				f, err := internal.CreateFile(errorFile, mode)
 				if err == nil {
-					oriStderr = f 
+					oriStderr = f
 					defer f.Close()
 				}
 			}
@@ -155,14 +159,13 @@ func (s *Shell) ExecutePipeline(input string) {
 						r.Close()
 					}
 				}
-				continue 
+				continue
 
 			}
 			args, writeOutput, writeError, outputFile, errorFile, mode := internal.RedirectInput(cmd.Args)
 			currCmd := exec.Command(path, args...)
 			currCmd.Args[0] = cmd.Name
 
-			
 			currCmd.Stdin = stdin
 
 			if writeOutput {
@@ -174,7 +177,7 @@ func (s *Shell) ExecutePipeline(input string) {
 			} else if ind < len(commands)-1 {
 				currCmd.Stdout = stdout
 			} else {
-				currCmd.Stdout = os.Stdout 
+				currCmd.Stdout = os.Stdout
 			}
 
 			if writeError {
@@ -245,4 +248,45 @@ func ExecuteBuiltInWithIO(s *Shell, cmd string, args []string, stdin io.Reader, 
 		return fmt.Errorf("unknown buildin command")
 	}
 
+}
+
+// ------------------------------------HISTORY FUNCTION -----------------------------------------
+
+func (s *Shell) readHistory(path string) error {
+	historyFile, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer historyFile.Close()
+
+	reader := bufio.NewReader(historyFile)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+
+		}
+		line = strings.TrimSpace(line)
+		if len(line) == 0 {
+			continue
+		}
+		s.historyList = append(s.historyList, line)
+	}
+	return nil
+}
+
+func (s *Shell) dumpHistory(path string) error {
+	historyFile, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer historyFile.Close()
+
+	for _, history := range s.historyList {
+		fmt.Fprintf(historyFile, "%s\n", history)
+	}
+	return nil
 }
