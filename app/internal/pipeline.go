@@ -18,18 +18,21 @@ func ParsePipeline(input string) []string {
 		if ch == '\'' && !inDoubleQ {
 			singleQ = !singleQ
 		} else if ch == '"' && !singleQ {
+			inDoubleQ = !inDoubleQ
+		}
 
-		} else if ch == '|' && !singleQ && !inDoubleQ {
-			segments = append(segments, curr.String())
-			curr.Reset()
+		if ch == '|' && !singleQ && !inDoubleQ {
+			if curr.Len() > 0 {
+				segments = append(segments, strings.TrimSpace(curr.String()))
+				curr.Reset()
+			}
+			continue
 		}
 		curr.WriteByte(ch)
 
 	}
 	if curr.Len() > 0 {
-		segments = append(segments, curr.String())
+		segments = append(segments, strings.TrimSpace(curr.String()))
 	}
 	return segments
 }
-
-
